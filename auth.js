@@ -62,7 +62,7 @@ if (loginForm_auth) {
         setLoading(true);
 
         try {
-            const { ok, data } = await apiPost('login.php', { username, password });
+            const { ok, data } = await apiPost('login', { username, password });
 
             if (!ok) {
                 showError(data.error || 'Login failed. Check your credentials.');
@@ -134,7 +134,7 @@ if (signupForm_auth) {
         setLoading(true);
 
         try {
-            const { ok, data } = await apiPost('register.php', { username, email, password });
+            const { ok, data } = await apiPost('register', { username, email, password });
 
             if (!ok) {
                 showError(data.error || 'Registration failed.');
