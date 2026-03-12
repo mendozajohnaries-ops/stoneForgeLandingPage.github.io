@@ -1,12 +1,12 @@
 // ============================================
-// dashboard.js — Loads player data from PHP API
+// dashboard.js — Loads player data from backend API
 // ============================================
 
-const API_BASE = 'https://stoneforge-backend.onrender.com/api'; // ← same as auth.js
+const API_BASE = 'https://stoneforge-backend.onrender.com/api';
 
 async function apiGet(endpoint) {
     const res = await fetch(`${API_BASE}/${endpoint}`, {
-        credentials: 'include', // sends httpOnly session cookie automatically
+        credentials: 'include',
     });
     const data = await res.json();
     return { ok: res.ok, status: res.status, data };
@@ -62,21 +62,10 @@ function renderInventory(inventory) {
         return;
     }
 
-    // Map item class IDs to emojis for display
     const iconMap = {
-        'Stone':     '🪨',
-        'Wood':      '🪵',
-        'Iron':      '⚙️',
-        'Gold':      '🥇',
-        'Diamond':   '💎',
-        'Pickaxe':   '⛏️',
-        'Hammer':    '🔨',
-        'Axe':       '🪓',
-        'Sword':     '⚔️',
-        'Shield':    '🛡️',
-        'Potion':    '🧪',
-        'Ore':       '🔩',
-        'Gem':       '💠',
+        'Stone': '🪨', 'Wood': '🪵', 'Iron': '⚙️', 'Gold': '🥇',
+        'Diamond': '💎', 'Pickaxe': '⛏️', 'Hammer': '🔨', 'Axe': '🪓',
+        'Sword': '⚔️', 'Shield': '🛡️', 'Potion': '🧪', 'Ore': '🔩', 'Gem': '💠',
     };
 
     grid.innerHTML = inventory.map(item => {
@@ -117,36 +106,34 @@ function renderCurrency(virtualCurrency) {
 // ---- Main init ----
 
 async function initDashboard() {
-    // 1. Check auth before rendering anything
-    const { ok, status } = await apiGet('check-auth.php').catch(() => ({ ok: false }));
+    // 1. Check sessionStorage first — set by auth.js on login
+    //    This avoids a cross-origin cookie check that fails on GitHub Pages
+    const cachedUser = JSON.parse(sessionStorage.getItem('sf_user') || 'null');
 
-    if (!ok || status === 401) {
+    if (!cachedUser) {
         window.location.href = 'login-page.html';
         return;
     }
 
-    // 2. Get cached user info from sessionStorage (set on login)
-    const cachedUser = JSON.parse(sessionStorage.getItem('sf_user') || '{}');
-
-    // 3. Show dashboard, hide loader
+    // 2. Show dashboard, hide loader
     document.getElementById('loading-screen').style.display = 'none';
     document.getElementById('dashboard').style.display = 'block';
 
-    // 4. Set a placeholder while real data loads
+    // 3. Render immediately with cached data
     renderProfile(null, cachedUser);
 
-    // 5. Load all data in parallel — don't wait for each one to finish
+    // 4. Load all data in parallel
     const [profileRes, statsRes, inventoryRes] = await Promise.allSettled([
-        apiGet('get-profile.php'),
-        apiGet('get-stats.php'),
-        apiGet('get-inventory.php'),
+        apiGet('get-profile'),
+        apiGet('get-stats'),
+        apiGet('get-inventory'),
     ]);
 
     // Profile
     if (profileRes.status === 'fulfilled' && profileRes.value.ok) {
         renderProfile(profileRes.value.data.profile, cachedUser);
     } else {
-        renderProfile(null, cachedUser); // fall back to cached
+        renderProfile(null, cachedUser);
     }
 
     // Stats
@@ -165,12 +152,12 @@ async function initDashboard() {
         renderCurrency({});
     }
 
-    // 6. Logout button
+    // 5. Logout button
     document.getElementById('logout-btn').addEventListener('click', async () => {
         await fetch(`${API_BASE}/logout`, {
             method: 'POST',
             credentials: 'include',
-        });
+        }).catch(() => {});
         sessionStorage.removeItem('sf_user');
         window.location.href = 'login-page.html';
     });
