@@ -101,24 +101,4 @@ function checkPasswordMatch() {
 passwordInput?.addEventListener('input', checkPasswordMatch);
 confirmInput?.addEventListener('input', checkPasswordMatch);
 
-signupForm?.addEventListener('submit', (e) => {
-  e.preventDefault();
-  checkPasswordMatch();
-  if (!signupForm.checkValidity()) {
-    signupForm.reportValidity();
-    return;
-  }
-  console.log('Signup valid — ready to submit');
-});
 
-// ---- LOGIN: form submit ----
-const loginForm = document.getElementById('login-form');
-
-loginForm?.addEventListener('submit', (e) => {
-  e.preventDefault();
-  if (!loginForm.checkValidity()) {
-    loginForm.reportValidity();
-    return;
-  }
-  console.log('Login valid — ready to submit');
-});
