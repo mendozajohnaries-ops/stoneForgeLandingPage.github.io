@@ -115,7 +115,10 @@ async function initAdmin() {
 
     let res;
     try {
-        res = await fetch(`${API_BASE}/admin/players`, { credentials: 'include' });
+        res = await fetch(`${API_BASE}/admin/players`, {
+            credentials: 'include',
+            headers: { 'x-playfab-id': cachedUser.playfab_id }
+        });
     } catch {
         document.getElementById('loading-screen').innerHTML =
             '<p style="color:#fca5a5;font-family:var(--font-ui);">Could not connect to server.</p>';
