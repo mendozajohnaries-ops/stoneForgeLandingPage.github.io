@@ -45,7 +45,7 @@ function renderGold(virtualCurrency) {
 
     if (gc === null) {
         el.textContent   = '—';
-        noteEl.textContent = 'Earn gold by playing StoneForge';
+        noteEl.textContent = 'Get coyns by purchasing';
     } else {
         el.textContent   = gc.toLocaleString();
         noteEl.textContent = gc === 0
