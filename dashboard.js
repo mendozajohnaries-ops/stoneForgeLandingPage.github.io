@@ -1,113 +1,60 @@
 // ============================================
-// dashboard.js — Loads player data from backend API
+// dashboard.js — Player profile page
 // ============================================
 
 const API_BASE = 'https://stoneforge-backend.onrender.com/api';
 
 async function apiGet(endpoint) {
-    const res = await fetch(`${API_BASE}/${endpoint}`, {
-        credentials: 'include',
-    });
+    const res  = await fetch(`${API_BASE}/${endpoint}`, { credentials: 'include' });
     const data = await res.json();
-    return { ok: res.ok, status: res.status, data };
+    return { ok: res.ok, data };
 }
 
-function showError(message) {
-    const banner = document.getElementById('error-banner');
-    banner.textContent = message;
-    banner.style.display = 'block';
-}
-
-function formatDate(isoString) {
-    if (!isoString) return 'Unknown';
-    return new Date(isoString).toLocaleDateString('en-US', {
+function formatDate(iso) {
+    if (!iso) return 'Unknown';
+    return new Date(iso).toLocaleDateString('en-US', {
         year: 'numeric', month: 'long', day: 'numeric'
     });
 }
 
-// ---- Render functions ----
-
-function renderProfile(profile, cachedUser) {
-    const name = profile?.DisplayName || cachedUser?.display_name || cachedUser?.username || 'Player';
-    document.getElementById('display-name').textContent = name;
-    document.getElementById('avatar-initials').textContent = name.charAt(0).toUpperCase();
-    document.getElementById('account-created').textContent =
-        'Member since ' + formatDate(profile?.Created);
-    document.getElementById('playfab-id').textContent =
-        'Player ID: ' + (cachedUser?.playfab_id || '—');
+function formatDateTime(iso) {
+    if (!iso) return 'Unknown';
+    return new Date(iso).toLocaleString('en-US', {
+        year: 'numeric', month: 'short', day: 'numeric',
+        hour: '2-digit', minute: '2-digit'
+    });
 }
 
-function renderStats(stats) {
-    const container = document.getElementById('stats-list');
-    const entries = Object.entries(stats);
+function renderProfile(user, details) {
+    const name = user?.display_name || user?.username || 'Player';
+    document.getElementById('display-name').textContent     = name;
+    document.getElementById('avatar-initials').textContent  = name.charAt(0).toUpperCase();
+    document.getElementById('playfab-id').textContent       = 'Player ID: ' + (user?.playfab_id || '—');
 
-    if (entries.length === 0) {
-        container.innerHTML = '<div class="stat-empty">No statistics recorded yet.<br>Play the game to earn stats!</div>';
-        return;
+    const created   = details?.created    || user?.created;
+    const lastLogin = details?.last_login || user?.last_login;
+
+    document.getElementById('account-created').textContent   = formatDate(created);
+    document.getElementById('account-last-login').textContent = formatDateTime(lastLogin);
+}
+
+function renderGold(virtualCurrency) {
+    const gc     = virtualCurrency?.GC ?? null;
+    const el     = document.getElementById('gold-amount');
+    const noteEl = document.getElementById('gold-note');
+
+    if (gc === null) {
+        el.textContent   = '—';
+        noteEl.textContent = 'Earn gold by playing StoneForge';
+    } else {
+        el.textContent   = gc.toLocaleString();
+        noteEl.textContent = gc === 0
+            ? 'Earn gold by playing StoneForge'
+            : 'Spend gold at the in-game shop';
     }
-
-    container.innerHTML = entries.map(([name, value]) => `
-        <div class="stat-row">
-            <span class="stat-row__name">${name.replace(/_/g, ' ')}</span>
-            <span class="stat-row__value">${value.toLocaleString()}</span>
-        </div>
-    `).join('');
 }
-
-function renderInventory(inventory) {
-    const grid = document.getElementById('inventory-grid');
-
-    if (!inventory || inventory.length === 0) {
-        grid.innerHTML = '<div class="stat-empty" style="grid-column:1/-1;">No items in inventory.<br>Craft items in-game to see them here!</div>';
-        return;
-    }
-
-    const iconMap = {
-        'Stone': '🪨', 'Wood': '🪵', 'Iron': '⚙️', 'Gold': '🥇',
-        'Diamond': '💎', 'Pickaxe': '⛏️', 'Hammer': '🔨', 'Axe': '🪓',
-        'Sword': '⚔️', 'Shield': '🛡️', 'Potion': '🧪', 'Ore': '🔩', 'Gem': '💠',
-    };
-
-    grid.innerHTML = inventory.map(item => {
-        const itemName = item.DisplayName || item.ItemId || 'Unknown Item';
-        const icon = Object.entries(iconMap).find(([k]) =>
-            itemName.toLowerCase().includes(k.toLowerCase())
-        )?.[1] ?? '📦';
-
-        return `
-            <div class="inventory-item" title="${item.ItemId}">
-                <div class="inventory-item__icon">${icon}</div>
-                <div class="inventory-item__name">${itemName}</div>
-                ${item.RemainingUses != null
-                    ? `<div class="inventory-item__qty">${item.RemainingUses} uses left</div>`
-                    : ''}
-            </div>
-        `;
-    }).join('');
-}
-
-function renderCurrency(virtualCurrency) {
-    const container = document.getElementById('currency-list');
-    const entries = Object.entries(virtualCurrency);
-
-    if (entries.length === 0) {
-        container.innerHTML = '<span style="font-size:0.85rem; color: var(--clr-text-dim); font-family: var(--font-ui);">No currency data</span>';
-        return;
-    }
-
-    container.innerHTML = entries.map(([code, amount]) => `
-        <div class="currency-chip">
-            <span class="currency-chip__code">${code}</span>
-            <span class="currency-chip__amount">${amount.toLocaleString()}</span>
-        </div>
-    `).join('');
-}
-
-// ---- Main init ----
 
 async function initDashboard() {
-    // 1. Check sessionStorage first — set by auth.js on login
-    //    This avoids a cross-origin cookie check that fails on GitHub Pages
     const cachedUser = JSON.parse(sessionStorage.getItem('sf_user') || 'null');
 
     if (!cachedUser) {
@@ -115,49 +62,33 @@ async function initDashboard() {
         return;
     }
 
-    // 2. Show dashboard, hide loader
+    if (cachedUser.is_admin) {
+        window.location.href = 'admin.html';
+        return;
+    }
+
     document.getElementById('loading-screen').style.display = 'none';
-    document.getElementById('dashboard').style.display = 'block';
+    document.getElementById('dashboard').style.display      = 'block';
 
-    // 3. Render immediately with cached data
-    renderProfile(null, cachedUser);
+    // Render immediately with cached data
+    renderProfile(cachedUser, null);
+    renderGold(null);
 
-    // 4. Load all data in parallel
-    const [profileRes, statsRes, inventoryRes] = await Promise.allSettled([
-        apiGet('get-profile'),
-        apiGet('get-stats'),
+    // Fetch details + virtual currency in parallel
+    const [detailsRes, inventoryRes] = await Promise.allSettled([
+        apiGet(`get-player-details?playfab_id=${cachedUser.playfab_id}`),
         apiGet('get-inventory'),
     ]);
 
-    // Profile
-    if (profileRes.status === 'fulfilled' && profileRes.value.ok) {
-        renderProfile(profileRes.value.data.profile, cachedUser);
-    } else {
-        renderProfile(null, cachedUser);
-    }
+    const details  = (detailsRes.status === 'fulfilled'   && detailsRes.value.ok)   ? detailsRes.value.data   : null;
+    const invData  = (inventoryRes.status === 'fulfilled' && inventoryRes.value.ok) ? inventoryRes.value.data : null;
 
-    // Stats
-    if (statsRes.status === 'fulfilled' && statsRes.value.ok) {
-        renderStats(statsRes.value.data.stats || {});
-    } else {
-        renderStats({});
-    }
+    renderProfile(cachedUser, details);
+    renderGold(invData?.virtual_currency || null);
 
-    // Inventory + currency
-    if (inventoryRes.status === 'fulfilled' && inventoryRes.value.ok) {
-        renderInventory(inventoryRes.value.data.inventory || []);
-        renderCurrency(inventoryRes.value.data.virtual_currency || {});
-    } else {
-        renderInventory([]);
-        renderCurrency({});
-    }
-
-    // 5. Logout button
+    // Logout
     document.getElementById('logout-btn').addEventListener('click', async () => {
-        await fetch(`${API_BASE}/logout`, {
-            method: 'POST',
-            credentials: 'include',
-        }).catch(() => {});
+        await fetch(`${API_BASE}/logout`, { method: 'POST', credentials: 'include' }).catch(() => {});
         sessionStorage.removeItem('sf_user');
         window.location.href = 'login-page.html';
     });

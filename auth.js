@@ -41,8 +41,11 @@ function saveUserAndRedirect(data, username) {
         playfab_id:   data.playfab_id,
         username:     data.username || username,
         display_name: data.display_name,
+        created:      data.created      || null,
+        last_login:   data.last_login   || null,
+        is_admin:     data.is_admin     || false,
     }));
-    window.location.href = 'dashboard.html';
+    window.location.href = data.is_admin ? 'admin.html' : 'dashboard.html';
 }
 
 // ---- LOGIN FORM (username + password) ----

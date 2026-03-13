@@ -104,8 +104,10 @@ confirmInput?.addEventListener('input', checkPasswordMatch);
 // ---- NAV: Show Dashboard if logged in, Sign In if not ----
 const authItem = document.getElementById('nav-auth-item');
 if (authItem) {
-  const user = sessionStorage.getItem('sf_user');
+  const user = JSON.parse(sessionStorage.getItem('sf_user') || 'null');
   if (user) {
-    authItem.innerHTML = '<a href="dashboard.html"><button class="nav__cta">Profile</button></a>';
+    const label = user.is_admin ? 'Dashboard' : 'Profile';
+    const page  = user.is_admin ? 'admin.html' : 'dashboard.html';
+    authItem.innerHTML = `<a href="${page}" class="nav__link">${label}</a>`;
   }
 }
