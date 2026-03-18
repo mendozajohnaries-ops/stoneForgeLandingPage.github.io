@@ -30,7 +30,7 @@ function renderProfile(user, details) {
     document.getElementById('display-name').textContent     = name;
     document.getElementById('avatar-initials').textContent  = name.charAt(0).toUpperCase();
     const pid = user?.playfab_id || '';
-    document.getElementById('playfab-id').textContent = 'Player ID: ' + (pid ? pid.slice(0,4) + '...' : '—');
+    document.getElementById('playfab-id').textContent = 'Player ID: ' + (pid ? pid.slice(0,4) : '—');
 
     const created   = details?.created    || user?.created;
     const lastLogin = details?.last_login || user?.last_login;

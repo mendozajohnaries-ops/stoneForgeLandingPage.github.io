@@ -85,7 +85,7 @@ function renderPlayers(players) {
                         <div class="player-avatar">${letter}</div>
                         <div>
                             <div style="color:var(--clr-white);font-weight:600;">${name}</div>
-                            <div class="player-id-small">${p.playfab_id.slice(0,4)}...</div>
+                            <div class="player-id-small">${p.playfab_id.slice(0,4)}</div>
                         </div>
                     </div>
                 </td>
