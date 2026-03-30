@@ -119,6 +119,15 @@ async function handleCheckout() {
     }
 }
 
+// ---- Auto-open shop if ?shop=true in URL ----
+function checkShopParam() {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('shop') === 'true') {
+        window.history.replaceState({}, '', 'dashboard.html');
+        openModal();
+    }
+}
+
 // ---- Check payment return ----
 function checkPaymentReturn() {
     const params  = new URLSearchParams(window.location.search);
@@ -149,7 +158,8 @@ async function initDashboard() {
     renderProfile(cachedUser, null);
     renderCoyns(null);
     checkPaymentReturn();
-    loadPackages();
+    await loadPackages();
+    checkShopParam();
 
     // Fetch details + inventory in parallel
     const [detailsRes, inventoryRes] = await Promise.allSettled([
