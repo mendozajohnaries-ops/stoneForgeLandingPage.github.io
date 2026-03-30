@@ -2,6 +2,12 @@
 // auth.js — Login, signup, logout logic
 // ============================================
 
+// Save shop intent if coming from game
+const urlParams = new URLSearchParams(window.location.search);
+if (urlParams.get('shop') === 'true') {
+    sessionStorage.setItem('shop_intent', 'true');
+}
+
 const API_BASE = 'https://stoneforge-backend.onrender.com/api';
 
 // ---- Shared helpers ----
@@ -45,7 +51,15 @@ function saveUserAndRedirect(data, username) {
         last_login:   data.last_login   || null,
         is_admin:     data.is_admin     || false,
     }));
-    window.location.href = data.is_admin ? 'admin.html' : 'dashboard.html';
+
+    // Check if user came from game shop link
+    const shopIntent = sessionStorage.getItem('shop_intent');
+    if (shopIntent === 'true') {
+        sessionStorage.removeItem('shop_intent');
+        window.location.href = data.is_admin ? 'admin.html' : 'dashboard.html?shop=true';
+    } else {
+        window.location.href = data.is_admin ? 'admin.html' : 'dashboard.html';
+    }
 }
 
 // ---- LOGIN FORM (username + password) ----
