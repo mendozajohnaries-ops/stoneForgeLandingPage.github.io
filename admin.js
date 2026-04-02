@@ -271,15 +271,10 @@ async function initAdmin() {
 
     allPlayers = data.players || [];
 
-    // Load player statuses
-    try {
-        const statusRes  = await fetch(`${API_BASE}/admin/player-statuses`, {
-            credentials: 'include',
-            headers: { 'x-playfab-id': cachedUser.playfab_id },
-        });
-        const statusData = await statusRes.json();
-        if (statusData.success) playerStatuses = statusData.statuses;
-    } catch {}
+    // Build status map from player data directly
+    for (const p of allPlayers) {
+        playerStatuses[p.playfab_id] = { status: p.status || 'active', suspension_end: p.suspension_end || null };
+    }
 
     document.getElementById('loading-screen').style.display = 'none';
     document.getElementById('admin-content').style.display  = 'block';
