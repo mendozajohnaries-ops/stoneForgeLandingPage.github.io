@@ -33,6 +33,15 @@ function renderProfile(user, details) {
     document.getElementById('account-last-login').textContent = formatDateTime(lastLogin);
 }
 
+function renderOwnerBadge(ownsGame) {
+    const badgeEl = document.getElementById('owner-badge-container');
+    if (ownsGame) {
+        badgeEl.innerHTML = '<div class="owner-badge">⚔️ Full Game Owner</div>';
+    } else {
+        badgeEl.innerHTML = '';
+    }
+}
+
 async function initDashboard() {
     cachedUser = JSON.parse(sessionStorage.getItem('sf_user') || 'null');
     if (!cachedUser) { window.location.href = 'login-page.html'; return; }
@@ -42,14 +51,18 @@ async function initDashboard() {
     document.getElementById('dashboard').style.display      = 'block';
 
     renderProfile(cachedUser, null);
+    renderOwnerBadge(false);
 
-    const [detailsRes] = await Promise.allSettled([
+    const [detailsRes, ownershipRes] = await Promise.allSettled([
         apiGet(`get-player-details?playfab_id=${cachedUser.playfab_id}`),
+        apiGet(`check-ownership?playfab_id=${cachedUser.playfab_id}`),
     ]);
 
-    const details = (detailsRes.status === 'fulfilled' && detailsRes.value.ok) ? detailsRes.value.data : null;
+    const details  = (detailsRes.status === 'fulfilled'   && detailsRes.value.ok)   ? detailsRes.value.data   : null;
+    const ownsGame = (ownershipRes.status === 'fulfilled' && ownershipRes.value.ok) ? ownershipRes.value.data.owns_game : false;
 
     renderProfile(cachedUser, details);
+    renderOwnerBadge(ownsGame);
 
     document.getElementById('logout-btn').addEventListener('click', async () => {
         await fetch(`${API_BASE}/logout`, { method: 'POST', credentials: 'include' }).catch(() => {});

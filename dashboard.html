@@ -23,6 +23,8 @@
     .profile-info__meta { font-size: 0.82rem; color: var(--clr-text-dim); font-family: var(--font-ui); margin-top: 0.3rem; }
     .profile-info__id { font-size: 0.75rem; color: var(--clr-text-dim); font-family: var(--font-body); margin-top: 0.25rem; letter-spacing: 0.03em; }
 
+    .owner-badge { display: inline-flex; align-items: center; gap: 0.4rem; background: linear-gradient(135deg, rgba(95,143,71,0.2), rgba(122,181,92,0.1)); border: 1px solid var(--clr-green); border-radius: 20px; padding: 0.3rem 0.85rem; font-size: 0.78rem; font-weight: 700; color: var(--clr-green-light); font-family: var(--font-ui); margin-top: 0.5rem; }
+
     .btn-logout { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.25); color: #fca5a5; padding: 0.6rem 1.4rem; border-radius: 8px; font-family: var(--font-ui); font-size: 0.88rem; font-weight: 600; cursor: pointer; transition: background 0.15s ease; white-space: nowrap; }
     .btn-logout:hover { background: rgba(239,68,68,0.2); }
 
@@ -82,6 +84,7 @@
         <div class="profile-info">
           <div class="profile-info__name" id="display-name">—</div>
           <div class="profile-info__id" id="playfab-id">—</div>
+          <div id="owner-badge-container"></div>
 
         </div>
       </div>
