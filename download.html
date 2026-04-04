@@ -28,7 +28,7 @@
       background: var(--clr-green); color: #fff; text-align: center;
       border-radius: 10px; font-family: var(--font-ui); font-size: 0.95rem;
       font-weight: 700; text-decoration: none; letter-spacing: 0.02em;
-      transition: opacity 0.15s ease;
+      transition: opacity 0.15s ease; border: none; cursor: pointer; box-sizing: border-box;
     }
     .dl-btn-link:hover { opacity: 0.85; }
     .dl-btn-link--orange { background: var(--clr-orange); }
@@ -129,7 +129,7 @@
         </div>
         <div class="dl-card__btn-wrap">
           <div id="full-action">
-            <button class="dl-btn dl-btn--loading" disabled style="width:100%;padding:0.85rem 1.5rem;border-radius:10px;font-family:var(--font-ui);font-size:0.95rem;font-weight:700;letter-spacing:0.02em;border:none;color:#fff;background:rgba(255,255,255,0.08);cursor:not-allowed;">Loading...</button>
+            <button disabled style="width:100%;padding:0.85rem 1.5rem;border-radius:10px;font-family:var(--font-ui);font-size:0.95rem;font-weight:700;letter-spacing:0.02em;border:none;color:#fff;background:var(--clr-orange);opacity:0.45;cursor:not-allowed;">🔒 Purchase to Unlock</button>
           </div>
           <span class="dl-btn-note" id="full-note">₱350 one-time purchase</span>
         </div>
@@ -241,8 +241,6 @@
     const API_BASE      = 'https://stoneforge-backend.onrender.com/api';
     const FULL_GAME_URL = 'https://drive.google.com/drive/folders/1u-lrULU2BEpGLfAqHs5qNczTRUU-5YGu?usp=sharing';
 
-    const BTN_BASE = 'width:100%;padding:0.85rem 1.5rem;border-radius:10px;font-family:var(--font-ui);font-size:0.95rem;font-weight:700;letter-spacing:0.02em;border:none;cursor:pointer;transition:opacity 0.15s ease;';
-
     async function initDownload() {
       const params = new URLSearchParams(window.location.search);
       if (params.get('payment') === 'success') {
@@ -256,14 +254,18 @@
 
       const user = JSON.parse(sessionStorage.getItem('sf_user') || 'null');
 
-      // Not signed in — disabled button
+      // Not signed in — disabled orange button, no action
       if (!user) {
         document.getElementById('full-note').textContent = '₱350 one-time purchase — sign in required';
-        document.getElementById('full-action').innerHTML = `
-          <button disabled style="${BTN_BASE}background:var(--clr-orange);color:#fff;opacity:0.45;cursor:not-allowed;">🔒 Purchase to Unlock</button>
-        `;
+        // Initial HTML already shows the correct disabled state; nothing more to do
         return;
       }
+
+      // Signed in — immediately show clickable orange button while ownership check loads
+      document.getElementById('full-action').innerHTML = `
+        <button id="buy-btn" class="dl-btn-link dl-btn-link--orange">🔒 Purchase to Unlock</button>
+      `;
+      document.getElementById('buy-btn').addEventListener('click', handlePurchase);
 
       try {
         const res  = await fetch(`${API_BASE}/check-ownership?playfab_id=${user.playfab_id}`, { credentials: 'include' });
@@ -274,18 +276,10 @@
           document.getElementById('full-action').innerHTML = `
             <a href="${FULL_GAME_URL}" target="_blank" class="dl-btn-link">⬇ Download Full Game</a>
           `;
-        } else {
-          document.getElementById('full-action').innerHTML = `
-            <button id="buy-btn" style="${BTN_BASE}background:var(--clr-orange);color:#fff;">🔒 Purchase to Unlock</button>
-          `;
-          document.getElementById('buy-btn').addEventListener('click', handlePurchase);
         }
+        // else: already showing clickable orange, nothing to change
       } catch {
-        // Fallback — signed in but ownership check failed; allow purchase attempt
-        document.getElementById('full-action').innerHTML = `
-          <button id="buy-btn" style="${BTN_BASE}background:var(--clr-orange);color:#fff;">🔒 Purchase to Unlock</button>
-        `;
-        document.getElementById('buy-btn')?.addEventListener('click', handlePurchase);
+        // Ownership check failed — already showing clickable orange, nothing to change
       }
     }
 
@@ -296,7 +290,6 @@
       const btn = document.getElementById('buy-btn');
       btn.textContent = 'Redirecting...';
       btn.disabled    = true;
-
       try {
         const res  = await fetch(`${API_BASE}/purchase`, {
           method: 'POST', credentials: 'include',
