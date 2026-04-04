@@ -129,7 +129,7 @@
         </div>
         <div class="dl-card__btn-wrap">
           <div id="full-action">
-            <button disabled style="width:100%;padding:0.85rem 1.5rem;border-radius:10px;font-family:var(--font-ui);font-size:0.95rem;font-weight:700;letter-spacing:0.02em;border:none;color:#fff;background:var(--clr-orange);opacity:0.45;cursor:not-allowed;">🔒 Purchase to Unlock</button>
+            <button disabled style="display:block;width:100%;padding:0.85rem 1.5rem;background:var(--clr-orange);color:#fff;text-align:center;border-radius:10px;font-family:var(--font-ui);font-size:0.95rem;font-weight:700;letter-spacing:0.02em;border:none;cursor:not-allowed;opacity:0.45;box-sizing:border-box;">🔒 Purchase to Unlock</button>
           </div>
           <span class="dl-btn-note" id="full-note">₱350 one-time purchase</span>
         </div>
@@ -262,9 +262,10 @@
       }
 
       // Signed in — immediately show clickable orange button while ownership check loads
-      document.getElementById('full-action').innerHTML = `
-        <button id="buy-btn" class="dl-btn-link dl-btn-link--orange">🔒 Purchase to Unlock</button>
-      `;
+      const STYLE_ORANGE = 'display:block;width:100%;padding:0.85rem 1.5rem;background:var(--clr-orange);color:#fff;text-align:center;border-radius:10px;font-family:var(--font-ui);font-size:0.95rem;font-weight:700;letter-spacing:0.02em;border:none;cursor:pointer;transition:opacity 0.15s ease;box-sizing:border-box;';
+      const STYLE_GREEN  = 'display:block;width:100%;padding:0.85rem 1.5rem;background:var(--clr-green);color:#fff;text-align:center;border-radius:10px;font-family:var(--font-ui);font-size:0.95rem;font-weight:700;letter-spacing:0.02em;text-decoration:none;transition:opacity 0.15s ease;box-sizing:border-box;';
+
+      document.getElementById('full-action').innerHTML = `<button id="buy-btn" style="${STYLE_ORANGE}">🔒 Purchase to Unlock</button>`;
       document.getElementById('buy-btn').addEventListener('click', handlePurchase);
 
       try {
@@ -273,9 +274,7 @@
 
         if (data.owns_game) {
           document.getElementById('full-note').textContent = 'You own the full game';
-          document.getElementById('full-action').innerHTML = `
-            <a href="${FULL_GAME_URL}" target="_blank" class="dl-btn-link">⬇ Download Full Game</a>
-          `;
+          document.getElementById('full-action').innerHTML = `<a href="${FULL_GAME_URL}" target="_blank" style="${STYLE_GREEN}">⬇ Download Full Game</a>`;
         }
         // else: already showing clickable orange, nothing to change
       } catch {
